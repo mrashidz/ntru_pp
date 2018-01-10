@@ -8,7 +8,7 @@ public:
     clsPoly(unsigned int _d);
     void randInit(unsigned int _m);
     unsigned int Degree; // N-1
-    std::vector<unsigned int> Coef; // a_[0 ~ N-1]
+    std::vector<int> Coef; // a_[0 ~ N-1]
 };
 clsPoly addPoly_mod(clsPoly _p1, clsPoly _p2, unsigned int _m);
 clsPoly mulPoly_mod(clsPoly _p1, clsPoly _p2, unsigned int _m, unsigned int _d);
