@@ -1,6 +1,6 @@
 #ifndef NTRU_H
 #define NTRU_H
-#include "clsPoly.h"
+#include "MISC.h"
 namespace NTRU {
 
 typedef struct

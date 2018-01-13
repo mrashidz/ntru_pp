@@ -7,9 +7,9 @@ key_pair_t generateKeyPair(unsigned int _N, unsigned int _q, unsigned int _p)
     key_pair_t kp;
     Polynomial::clsPoly f(_N-1),g(_N-1),f_q,f_p;
     //check the first coef?!
-    g.randInit(3);//?????
+//    g.randInit();//?????
     while (!foundProperPolyF) {
-        f.randInit(3);
+//        f.randInit();
         f_p = Polynomial::inverse(f,_p);
         f_q = Polynomial::inverse(f,_q);
         if (f_p.Degree && f_q.Degree)
@@ -25,7 +25,7 @@ key_pair_t generateKeyPair(unsigned int _N, unsigned int _q, unsigned int _p)
 Polynomial::clsPoly encrypt(Polynomial::clsPoly _m, Polynomial::clsPoly _pk)
 {
     Polynomial::clsPoly res,r,tmp;
-    r.randInit(3);/////?????
+//    r.randInit();/////?????
     unsigned int q,d;///this should be embedded int he public key!
     tmp = Polynomial::mulPoly_mod(_m,r,q,d);
     res = Polynomial::addPoly_mod(_m,tmp,q);
