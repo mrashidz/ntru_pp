@@ -49,6 +49,14 @@ void clsPoly::decreaseDeg()
     this->Degree--;
 }
 
+void clsPoly::zero()
+{
+    this->Degree = 0;
+    this->Coef.clear();
+    this->Coef.resize(1);
+    this->Coef[0]=0;
+}
+
 //void clsPoly::randInit()
 //{
 ////    srand (time(NULL));
@@ -102,14 +110,14 @@ clsPoly addPoly_mod(int _a, clsPoly _p, int _m)
     return res;
 }
 
-clsPoly mulPoly_mod(clsPoly _p1, clsPoly _p2, int _m, unsigned int _N)
+clsPoly mulPoly_mod(clsPoly _p1, clsPoly _p2, int _m, unsigned int _d)
 {
 
-    clsPoly res(_N);
+    clsPoly res(_d);
 //    res.Degree = _degree;
     for (unsigned int i = 0; i <=_p1.Degree; i++) {
         for (unsigned int j = 0; j <=_p2.Degree; j++) {
-            unsigned int curr_deg = (i+j) % (_N+1);
+            unsigned int curr_deg = (i+j) % (_d+1);
             res.Coef[curr_deg] = ((_p1.Coef[i] * _p2.Coef[j]) + res.Coef[curr_deg]) % _m;
         }
     }
@@ -138,7 +146,7 @@ clsPoly inverse(clsPoly _p, unsigned int _a)
     return res;
 }
 
-clsPoly minPoly_mod(clsPoly _p1, clsPoly _p2, int _m)
+clsPoly subPoly_mod(clsPoly _p1, clsPoly _p2, int _m)
 {
     clsPoly minus_p2(_p2.Degree);
     for(unsigned int i = 0; i<=_p2.Degree; i++)
@@ -146,18 +154,17 @@ clsPoly minPoly_mod(clsPoly _p1, clsPoly _p2, int _m)
     return addPoly_mod(_p1,minus_p2,_m);
 }
 
-clsPoly mulPoly(clsPoly _p1, clsPoly _p2)
+clsPoly mulPoly(clsPoly *_p1, clsPoly *_p2)
 {
-    clsPoly res(_p1.Degree+_p2.Degree);
+    clsPoly res(_p1->Degree+_p2->Degree);
 //    res.Degree = _degree;
-    for (unsigned int i = 0; i <=_p1.Degree; i++) {
-        for (unsigned int j = 0; j <=_p2.Degree; j++) {
+    for (unsigned int i = 0; i <=_p1->Degree; i++) {
+        for (unsigned int j = 0; j <=_p2->Degree; j++) {
             unsigned int curr_deg = (i+j);
-            res.Coef[curr_deg] = ((_p1.Coef[i] * _p2.Coef[j]) + res.Coef[curr_deg]) ;
+            res.Coef[curr_deg] = ((_p1->Coef[i] * _p2->Coef[j]) + res.Coef[curr_deg]) ;
         }
-    }
+    }    
     return res;
-
 }
 
 

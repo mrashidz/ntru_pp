@@ -2,115 +2,158 @@
 #include <stdlib.h>
 #include <time.h>
 #include <iostream>
+#include <cmath>
 
 namespace MISC {
 
-Polynomial::clsPoly MISC::inverse_AlmostInverseAlg_for3(Polynomial::clsPoly _p, unsigned int _N)
-{
-    int k = 0;
-    Polynomial::clsPoly b(0),c(0),f,g(_N),tmp;
-    f = _p;
-    g.Coef[_N] = 1;
-    g.Coef[0] = -1;
-    b.Coef[0] = 1;
+Polynomial::clsPoly
+MISC::inverse_AlmostInverseAlg_for3(Polynomial::clsPoly _p, unsigned int _N) {
+    unsigned int k = 0;
+    Polynomial::clsPoly b(0),c(0),f=_p,g(_N),tmp;
+    g.Coef[_N] = b.Coef[0] = 1;
+    g.Coef[0] = -1;    
     Polynomial::clsPoly x(1);
     x.Coef[1] = 1;
-    std::cout << "Inverse of polynomial" << std::endl;
-    Polynomial::print_poly(f);
-    std::cout << "in mod 3 for g(x):" << std::endl;
-    Polynomial::print_poly(g);
-    std::cout << "b(x):" << std::endl;
-    Polynomial::print_poly(b);
-    std::cout << "c(x):" << std::endl;
-    Polynomial::print_poly(c);
-    std::cout << "x(x):" << std::endl;
-    Polynomial::print_poly(x);
-    std::cout << "---------------" << std::endl;//found
-
-
-    int asd = 0;
     do {
-        ++asd;
-        std::cout << "........................................................"<< std::endl;//found
         while (f.Coef[0]==0) {
-            std::cout << ">>> K:" << k << std::endl;//found
             k++;
             f.decreaseDeg();
             f.refine();
-            std::cout << "+++ f decreased:" << std::endl;
-            Polynomial::print_poly(f);
-
-            c = Polynomial::mulPoly(c,x);
+            c = Polynomial::mulPoly(&c,&x);
             c.refine();
-            std::cout << "+++ c times x:" << std::endl;
-            Polynomial::print_poly(c);
         }
-
-
         if (f.Degree == 0) {
-            if (f.Coef[0])
-                std::cout << "?!?!?!?!?!?!?!?!?!?!?!?\n\n\n\n\n\n\n\n\nfound" << std::endl;//found
-            else
-                std::cout << "?!?!?!?!?!?!?!?!?!?!?!?\n\n\n\n\n\n\n\n\nnot invertable" << std::endl;//found
+            if (f.Coef[0]) {
+                b.refine();
+                k %=_N;
+                x = Polynomial::clsPoly(_N-k);
+                x.Coef[_N-k] = f.Coef[0];
+                tmp = Polynomial::mulPoly_mod(b,x,3,_N-1);
+                tmp.refine();
+            } else
+                tmp.zero();
             break;
         }
         if (f.Degree < g.Degree) {
-            std::cout << "--- SWAP ---" << std::endl;
             tmp = f;
             f = g;
             g = tmp;
             tmp = c;
             c = b;
             b = tmp;
-            std::cout << "f(x)" << std::endl;
-            Polynomial::print_poly(f);
-            std::cout << "g(x):" << std::endl;
-            Polynomial::print_poly(g);
-            std::cout << "b(x):" << std::endl;
-            Polynomial::print_poly(b);
-            std::cout << "c(x):" << std::endl;
-            Polynomial::print_poly(c);
-
         }
-        if (f.Coef[0] == g.Coef[0]) {
-            std::cout << ".:: EQUL ::." << g.Coef[0]<< f.Coef[0] << std::endl;
-            f = Polynomial::minPoly_mod(f,g,3);
-            f.refine();
-            b = Polynomial::minPoly_mod(b,c,3);
-            b.refine();
-            std::cout << "f(x)" << std::endl;
-            Polynomial::print_poly(f);
-            std::cout << "b(x):" << std::endl;
-            Polynomial::print_poly(b);
-        } else {
-            std::cout << "!!! NEQUL !!!" <<  g.Coef[0]<< f.Coef[0] << std::endl;
+        if (f.Coef[0] == g.Coef[0]) {        
+            f = Polynomial::subPoly_mod(f,g,3);
+            b = Polynomial::subPoly_mod(b,c,3);
+
+        } else {            
             f = Polynomial::addPoly_mod(f,g,3);
             b = Polynomial::addPoly_mod(b,c,3);
-            f.refine();
-            b.refine();
-            std::cout << "f(x)" << std::endl;
-            Polynomial::print_poly(f);
-            std::cout << "b(x):" << std::endl;
-            Polynomial::print_poly(b);
         }
-    } while (asd < 20);
-//    std::cout << "f " <<  f.Degree << std::endl;//found
-    return Polynomial::clsPoly(1);
+        b.refine();
+        f.refine();
+    } while (true);
+    return tmp;
+}
+
+Polynomial::clsPoly MISC::inverse_AlmostInverseAlg_for2(Polynomial::clsPoly _p, unsigned int _N)
+{
+    unsigned int k = 0;
+    Polynomial::clsPoly b(0),c(0),f=_p,g(_N),tmp;
+    g.Coef[_N] = b.Coef[0] = 1;
+    g.Coef[0] = -1;
+    Polynomial::clsPoly x(1);
+    x.Coef[1] = 1;
+    do {
+        while (f.Coef[0]==0) {
+            k++;
+            f.decreaseDeg();
+            f.refine();
+            c = Polynomial::mulPoly(&c,&x);
+            c.refine();
+        }
+        if (f.Degree == 0) {
+            if (f.Coef[0]==1) {
+                k %=_N;
+                x = Polynomial::clsPoly(_N-k);
+                x.Coef[_N-k] = f.Coef[0];
+                tmp = Polynomial::mulPoly_mod(b,x,2,_N-1);
+                tmp.refine();
+            } else
+                tmp.zero();
+            break;
+        }
+        if (f.Degree < g.Degree) {
+            tmp = f;
+            f = g;
+            g = tmp;
+            tmp = c;
+            c = b;
+            b = tmp;
+        }
+        f = Polynomial::addPoly_mod(f,g,2);
+        b = Polynomial::addPoly_mod(b,c,2);
+        b.refine();
+        f.refine();
+    } while (true);
+    return tmp;
+}
+
+Polynomial::clsPoly
+MISC::inverse_NewtonIteration_for2(Polynomial::clsPoly _p,
+                              Polynomial::clsPoly _p_1,
+                              int _m,
+                              int _N)
+{
+    Polynomial::clsPoly res = _p_1,two(0),tmp;
+    two.Coef[0]=2;
+    int q = 2;
+    while (_m > q) {
+//        q = std::pow(q,2);
+        q *=2;
+        std::cout << q << " < " << _m<< std::endl;
+        if (q > 32) {
+            std::cout << q << " > " << _m<< std::endl;
+            break;
+        }
+        tmp = Polynomial::mulPoly_mod(_p,res,q,_N-1);
+        tmp = Polynomial::subPoly_mod(two,tmp,q);
+        res = Polynomial::mulPoly_mod(tmp,res,q,_N-1);
+
+    }
+    res.refine();
+    res = Polynomial::addPoly_mod(0,res,_m);
+    return res;
 }
 
 Polynomial::clsPoly MISC::inverse_AlmostInverseAlg_forP(Polynomial::clsPoly _p, unsigned int _N, unsigned int _m)
 {
-    int k = 0;
-    Polynomial::clsPoly b(0),c(0),f,g(_N),tmp;
-    f = _p;
-    g.Coef[_N] = 1;
+    unsigned int k = 0;
+    Polynomial::clsPoly b(0),c(0),f=_p,g(_N),tmp;
+    g.Coef[_N] = b.Coef[0] = 1;
     g.Coef[0] = -1;
-    b.Coef[0] = 1;
+    Polynomial::clsPoly x(1);
+    x.Coef[1] = 1;
     do {
-        f = this->deccreaseDegree(f);
-        c = this->increaseDegree(c);
-        k++;
-        if (f.Degree == 0) std::cout << "found" << std::endl;//found
+        while (f.Coef[0]==0) {
+            k++;
+            f.decreaseDeg();
+            f.refine();
+            c = Polynomial::mulPoly(&c,&x);
+            c.refine();
+        }
+        if (f.Degree == 0) {
+            int u = this->inverse_ExtendedEuclidian(f.Coef[0],_m);
+            b = Polynomial::mulPoly_mod(u,b,_m);
+//            b.refine();
+            k %=_N;
+            x = Polynomial::clsPoly(_N-k);
+            x.Coef[_N-k] = f.Coef[0];
+            tmp = Polynomial::mulPoly_mod(b,x,_m,_N-1);
+            tmp.refine();
+
+            break;
+        }
         if (f.Degree < g.Degree) {
             tmp = f;
             f = g;
@@ -121,10 +164,13 @@ Polynomial::clsPoly MISC::inverse_AlmostInverseAlg_forP(Polynomial::clsPoly _p, 
         }
         int u = (this->inverse_ExtendedEuclidian(g.Coef[0],_m)*f.Coef[0])%_m;
         tmp = Polynomial::mulPoly_mod(u,g,_m);
-        f = Polynomial::minPoly_mod(f,tmp,_m);
+        f = Polynomial::subPoly_mod(f,tmp,_m);
         tmp = Polynomial::mulPoly_mod(u,c,_m);
-        b = Polynomial::minPoly_mod(b,tmp,_m);
-    } while (f.Coef[0]==0);
+        b = Polynomial::subPoly_mod(b,tmp,_m);
+        b.refine();
+        f.refine();
+    } while (true);
+    return tmp;
 }
 
 int MISC::inverse_ExtendedEuclidian(unsigned int _a, unsigned int _b) {
@@ -181,6 +227,7 @@ Polynomial::clsPoly MISC::deccreaseDegree(Polynomial::clsPoly _p)
         res.Coef[i-1]=_p.Coef[i];
     return res;
 }
+
 
 
 
