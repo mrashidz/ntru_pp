@@ -1,5 +1,4 @@
 #include <iostream>
-
 #include "lib/NTRU.h"
 using namespace std;
 
@@ -34,19 +33,19 @@ int main()
 //    return 0;
 
 
-    int afv = MISC::MISC::instance().inverse_ExtendedEuclidian(7,26);
-    cout << "inv: "<<afv << endl;
+//    int afv = MISC::inverse_ExtendedEuclidian(7,26);
+//    cout << "inv: "<<afv << endl;
 
-    cout << "inv: "<< endl;
-    Polynomial::print_poly(MISC::MISC::instance().inverse_AlmostInverseAlg_for3(f,11));
-//    Polynomial::print_poly(MISC::MISC::instance().inverse_AlmostInverseAlg_forP(f,11,3));
-    Polynomial::clsPoly asasaaa, inv2 = MISC::MISC::instance().inverse_AlmostInverseAlg_for2(f,11);
-    asasaaa = MISC::MISC::instance().inverse_AlmostInverseAlg_for3(f,11);
-    Polynomial::print_poly(Polynomial::mulPoly_mod(f,asasaaa,3,10));
-//    return 0;
-    asasaaa = Polynomial::mulPoly_mod(f,inv2,2,10);
-    Polynomial::print_poly(asasaaa);
-    Polynomial::print_poly(MISC::MISC::instance().inverse_NewtonIteration_for2(f,inv2,32,11));
+//    cout << "inv: "<< endl;
+//    Polynomial::print_poly(MISC::inverse_AlmostInverseAlg_for3(f,11));
+////    Polynomial::print_poly(MISC::MISC::instance().inverse_AlmostInverseAlg_forP(f,11,3));
+//    Polynomial::clsPoly asasaaa, inv2 = MISC::inverse_AlmostInverseAlg_for2(f,11);
+//    asasaaa = MISC::inverse_AlmostInverseAlg_for3(f,11);
+//    Polynomial::print_poly(Polynomial::mulPoly_mod(f,asasaaa,3,10));
+////    return 0;
+//    asasaaa = Polynomial::mulPoly_mod(f,inv2,2,10);
+//    Polynomial::print_poly(asasaaa);
+//    Polynomial::print_poly(MISC::inverse_NewtonIteration_for2(f,inv2,32,11));
 
     return 0;
 }

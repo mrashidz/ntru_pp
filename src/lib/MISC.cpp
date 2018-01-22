@@ -3,11 +3,12 @@
 #include <time.h>
 #include <iostream>
 #include <cmath>
+#include <cstring>
 
 namespace MISC {
 
 Polynomial::clsPoly
-MISC::inverse_AlmostInverseAlg_for3(Polynomial::clsPoly _p, unsigned int _N) {
+inverse_AlmostInverseAlg_for3(Polynomial::clsPoly _p, unsigned int _N) {
     unsigned int k = 0;
     Polynomial::clsPoly b(0),c(0),f=_p,g(_N),tmp;
     g.Coef[_N] = b.Coef[0] = 1;
@@ -56,7 +57,7 @@ MISC::inverse_AlmostInverseAlg_for3(Polynomial::clsPoly _p, unsigned int _N) {
     return tmp;
 }
 
-Polynomial::clsPoly MISC::inverse_AlmostInverseAlg_for2(Polynomial::clsPoly _p, unsigned int _N)
+Polynomial::clsPoly inverse_AlmostInverseAlg_for2(Polynomial::clsPoly _p, unsigned int _N)
 {
     unsigned int k = 0;
     Polynomial::clsPoly b(0),c(0),f=_p,g(_N),tmp;
@@ -99,8 +100,14 @@ Polynomial::clsPoly MISC::inverse_AlmostInverseAlg_for2(Polynomial::clsPoly _p, 
     return tmp;
 }
 
+Polynomial::clsPoly inverse__forQ(Polynomial::clsPoly _p, unsigned int _N, unsigned int _Q)
+{
+    Polynomial::clsPoly p_2 = inverse_AlmostInverseAlg_for2(_p,_N);
+    return inverse_NewtonIteration_for2(_p,p_2,_Q,_N);
+}
+
 Polynomial::clsPoly
-MISC::inverse_NewtonIteration_for2(Polynomial::clsPoly _p,
+inverse_NewtonIteration_for2(Polynomial::clsPoly _p,
                               Polynomial::clsPoly _p_1,
                               int _m,
                               int _N)
@@ -126,7 +133,7 @@ MISC::inverse_NewtonIteration_for2(Polynomial::clsPoly _p,
     return res;
 }
 
-Polynomial::clsPoly MISC::inverse_AlmostInverseAlg_forP(Polynomial::clsPoly _p, unsigned int _N, unsigned int _m)
+Polynomial::clsPoly inverse_AlmostInverseAlg_forP(Polynomial::clsPoly _p, unsigned int _N, unsigned int _m)
 {
     unsigned int k = 0;
     Polynomial::clsPoly b(0),c(0),f=_p,g(_N),tmp;
@@ -143,7 +150,7 @@ Polynomial::clsPoly MISC::inverse_AlmostInverseAlg_forP(Polynomial::clsPoly _p, 
             c.refine();
         }
         if (f.Degree == 0) {
-            int u = this->inverse_ExtendedEuclidian(f.Coef[0],_m);
+            int u = inverse_ExtendedEuclidian(f.Coef[0],_m);
             b = Polynomial::mulPoly_mod(u,b,_m);
 //            b.refine();
             k %=_N;
@@ -162,7 +169,7 @@ Polynomial::clsPoly MISC::inverse_AlmostInverseAlg_forP(Polynomial::clsPoly _p, 
             c = b;
             b = tmp;
         }
-        int u = (this->inverse_ExtendedEuclidian(g.Coef[0],_m)*f.Coef[0])%_m;
+        int u = (inverse_ExtendedEuclidian(g.Coef[0],_m)*f.Coef[0])%_m;
         tmp = Polynomial::mulPoly_mod(u,g,_m);
         f = Polynomial::subPoly_mod(f,tmp,_m);
         tmp = Polynomial::mulPoly_mod(u,c,_m);
@@ -173,7 +180,7 @@ Polynomial::clsPoly MISC::inverse_AlmostInverseAlg_forP(Polynomial::clsPoly _p, 
     return tmp;
 }
 
-int MISC::inverse_ExtendedEuclidian(unsigned int _a, unsigned int _b) {
+int inverse_ExtendedEuclidian(unsigned int _a, unsigned int _b) {
     unsigned int /*gcd = 0,*/r =0,r_prime=0, x = 1, x_prime = 0,y=0,y_prime=1,dev=0,tmp = 0;
     int reverse = -1;
     r = _b;
@@ -201,13 +208,34 @@ int MISC::inverse_ExtendedEuclidian(unsigned int _a, unsigned int _b) {
     return reverse;
 }
 
-MISC::MISC()
+void RND::fillPoly(Polynomial::clsPoly *_p,const u_int16_t _d, const int _val)
+{
+    u_int16_t i,t = 0;
+    while (t < _d) {
+        i = this->intLessThan(_p->Degree+1);
+        if (!_p->Coef[i]) {
+            _p->Coef[i] = _val;
+            t++;
+        }
+    }
+}
+
+void RND::fillByte(unsigned char *_string, size_t _l)
+{
+    unsigned char tmp;
+    for (int i = 0; i < _l; i++) {
+        tmp = (unsigned char)rand();
+        memcpy(_string+i,&tmp,sizeof(unsigned char));
+    }
+}
+
+RND::RND()
 {
     srand (time(NULL));
 
 }
 
-Polynomial::clsPoly MISC::increaseDegree(Polynomial::clsPoly _p)
+Polynomial::clsPoly increaseDegree(Polynomial::clsPoly _p)
 {
     Polynomial::clsPoly res(_p.Degree+1);
     if (_p.Degree == 0) {
@@ -219,7 +247,7 @@ Polynomial::clsPoly MISC::increaseDegree(Polynomial::clsPoly _p)
     return res;
 }
 
-Polynomial::clsPoly MISC::deccreaseDegree(Polynomial::clsPoly _p)
+Polynomial::clsPoly deccreaseDegree(Polynomial::clsPoly _p)
 {
     if (_p.Degree == 0) return _p; //shouldnt end up here!
     Polynomial::clsPoly res(_p.Degree-1);
@@ -227,6 +255,8 @@ Polynomial::clsPoly MISC::deccreaseDegree(Polynomial::clsPoly _p)
         res.Coef[i-1]=_p.Coef[i];
     return res;
 }
+
+
 
 
 

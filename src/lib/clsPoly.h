@@ -1,6 +1,7 @@
 #ifndef CLSPOLY_H
 #define CLSPOLY_H
 #include <vector>
+#include <stdlib.h>
 namespace Polynomial {
 class clsPoly { // TRUNCATED POLYNOMIAL OBJECTS
 public:
@@ -9,6 +10,9 @@ public:
     void refine();
     void decreaseDeg();
     void zero();    
+    inline bool isZero() {
+        return this->Degree == 0 && this->Coef[0] ==0;
+    }
     unsigned int Degree; // N-1
     std::vector<int> Coef; // a_[0 ~ N-1]
 };
