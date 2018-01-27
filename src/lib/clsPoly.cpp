@@ -103,6 +103,8 @@ clsPoly addPoly_mod(clsPoly _p1, clsPoly _p2, int _m)
     return res;
 }
 
+
+//no need?
 clsPoly addPoly_mod(int _a, clsPoly _p, int _m)
 {
     clsPoly res = _p;

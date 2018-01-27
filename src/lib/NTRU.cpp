@@ -1,11 +1,9 @@
 #include "NTRU.h"
-#include <stdlib.h>
-#include <cstring>
+
 
 namespace NTRU {
-const int8_t BIN_TO_TRIN_POLY_1[8] = {0, 0, 0, 1, 1, 1,-1,-1};
-const int8_t BIN_TO_TRIN_POLY_2[8] = {0, 1,-1, 0, 1,-1, 0, 1};
-key_pair_t generateKeyPair(const params_t _param) {
+
+key_pair_t generateKeyPair(const Config::params_t _param) {
     key_pair_t keyPair;
     keyPair.Pk.Param = _param;
     u_int16_t p = 3;
@@ -20,7 +18,7 @@ key_pair_t generateKeyPair(const params_t _param) {
         f = Polynomial::mulPoly_mod(p,f_p,_param.q);
         f.Coef[0]=(f.Coef[0]+1)%_param.q;
         //calculating polynomial f_q, multiplicative invers of f in mod q
-        f_q = MISC::inverse__forQ(f,_param.N,_param.q);
+        f_q = Inverese::forQ(f,_param.N,_param.q);
         if (!f_q.isZero())
             break;
     }
@@ -29,7 +27,7 @@ key_pair_t generateKeyPair(const params_t _param) {
         MISC::RND::instance().fillPoly(&g,_param.dg,1);
         MISC::RND::instance().fillPoly(&g,_param.dg,-1);
         //calculating polynomial f_q, multiplicative invers of f in mod q
-        g_q = MISC::inverse__forQ(g,_param.N,_param.q);
+        g_q = Inverese::forQ(g,_param.N,_param.q);
         if (!g_q.isZero())
             break;
     }
@@ -41,7 +39,7 @@ key_pair_t generateKeyPair(const params_t _param) {
 }
 
 
-Polynomial::clsPoly MbinToMtrin(unsigned char *_m,  size_t _l, const params_t *_param, const u_int16_t _max_len) {
+Polynomial::clsPoly MbinToMtrin(unsigned char *_m,  size_t _l, const Config::params_t *_param, const u_int16_t _max_len) {
 
     Polynomial::clsPoly Mtrin(_param->N-1);
     u_int16_t db_byte = _param->db/8;
@@ -136,9 +134,9 @@ std::string MtrinToMbin(const Polynomial::clsPoly *_mtrin) {
 //}
 Polynomial::clsPoly encrypt(const unsigned char *_m, const size_t _l, const pub_key_t _pk) {
 
-    u_int16_t maxLen = 1; //uint8_t ntru_max_msg_len(const NtruEncParams *params) {
+    u_int16_t maxLen = _pk.Param.maxMsgLen; //uint8_t ntru_max_msg_len(const NtruEncParams *params) {
     if (_l>maxLen||maxLen>255);//error
-    Polynomial::clsPoly Mtrin = NTRU::MbinToMtrin(_m,_l,_pk.Param,maxLen);
+    Polynomial::clsPoly Mtrin = Converse::MbinToMtrin(_m,_l,_pk.Param,maxLen);
     //random polynomial generation constant c
     Polynomial::clsPoly r(_pk.Param.N-1);
     MISC::RND::instance().fillPoly(&r,_pk.Param.dr,_pk.Param.c);
@@ -147,14 +145,14 @@ Polynomial::clsPoly encrypt(const unsigned char *_m, const size_t _l, const pub_
     return e;
 }
 
-Polynomial::clsPoly decrypt(Polynomial::clsPoly _e, key_pair_t _k) {
+std::string decrypt(Polynomial::clsPoly _e, key_pair_t _k) {
 
     Polynomial::clsPoly res,a,b,c;
     a = Polynomial::mulPoly_mod(_e,_k.Sk.f,_k.Pk.Param.q,_k.Pk.Param.N-1);
     b = Polynomial::mulPoly_mod(1,a,3);
     c = Polynomial::mulPoly_mod(a,_k.Sk.f_p,_k.Pk.Param.q,_k.Pk.Param.N-1);
 
-    return res;
+    return Converse::MtrinToMbin(&c);
 }
 
 

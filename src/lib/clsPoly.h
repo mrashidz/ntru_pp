@@ -2,6 +2,7 @@
 #define CLSPOLY_H
 #include <vector>
 #include <stdlib.h>
+#include <cstring>
 namespace Polynomial {
 class clsPoly { // TRUNCATED POLYNOMIAL OBJECTS
 public:
