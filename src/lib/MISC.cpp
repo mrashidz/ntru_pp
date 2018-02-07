@@ -4,15 +4,19 @@
 #include <iostream>
 #include <cmath>
 #include <cstring>
+#include <byteswap.h>
+#include <bitset>
+using namespace std;
 
 namespace Inverese {
 
 Polynomial::clsPoly
-AI_for3(Polynomial::clsPoly _p, unsigned int _N) {
+AI_for3(Polynomial::clsPoly _p, u_int16_t _N) {
     unsigned int k = 0;
+    int i,j;
     Polynomial::clsPoly b(0),c(0),f=_p,g(_N),tmp;
     g.Coef[_N] = b.Coef[0] = 1;
-    g.Coef[0] = -1;    
+    g.Coef[0] = -1;
     Polynomial::clsPoly x(1);
     x.Coef[1] = 1;
     do {
@@ -23,7 +27,7 @@ AI_for3(Polynomial::clsPoly _p, unsigned int _N) {
             c = Polynomial::mulPoly(&c,&x);
             c.refine();
         }
-        if (f.Degree == 0) {
+        if (f.Degree() == 0) {
             if (f.Coef[0]) {
                 b.refine();
                 k %=_N;
@@ -35,7 +39,7 @@ AI_for3(Polynomial::clsPoly _p, unsigned int _N) {
                 tmp.zero();
             break;
         }
-        if (f.Degree < g.Degree) {
+        if (f.Degree() < g.Degree()) {
             tmp = f;
             f = g;
             g = tmp;
@@ -43,11 +47,15 @@ AI_for3(Polynomial::clsPoly _p, unsigned int _N) {
             c = b;
             b = tmp;
         }
-        if (f.Coef[0] == g.Coef[0]) {        
+        i = f.Coef[0];
+        while (i<0)i+=3;
+        j = g.Coef[0];
+        while (j<0)j+=3;
+        if (i == j) {
             f = Polynomial::subPoly_mod(f,g,3);
             b = Polynomial::subPoly_mod(b,c,3);
 
-        } else {            
+        } else {
             f = Polynomial::addPoly_mod(f,g,3);
             b = Polynomial::addPoly_mod(b,c,3);
         }
@@ -57,23 +65,29 @@ AI_for3(Polynomial::clsPoly _p, unsigned int _N) {
     return tmp;
 }
 
-Polynomial::clsPoly AI_for2(Polynomial::clsPoly _p, unsigned int _N)
-{
+
+Polynomial::clsPoly AI_for2(Polynomial::clsPoly _p, u_int16_t _N) {
     unsigned int k = 0;
-    Polynomial::clsPoly b(0),c(0),f=_p,g(_N),tmp;
+    Polynomial::clsPoly b(0),c(0),g(_N),tmp,f=_p;
     g.Coef[_N] = b.Coef[0] = 1;
     g.Coef[0] = -1;
     Polynomial::clsPoly x(1);
     x.Coef[1] = 1;
+    u_int16_t tmp_d, aaasss;
+    bool kill = false;
+//    f.applyMod(2);
     do {
-        while (f.Coef[0]==0) {
+        tmp_d = f.Degree();
+        while (f.Coef[0]==0 && !f.isZero()) {
             k++;
             f.decreaseDeg();
             f.refine();
             c = Polynomial::mulPoly(&c,&x);
             c.refine();
         }
-        if (f.Degree == 0) {
+        if (tmp_d==f.Degree())
+            kill = true;
+        if (f.Degree() == 0) {
             if (f.Coef[0]==1) {
                 k %=_N;
                 x = Polynomial::clsPoly(_N-k);
@@ -84,18 +98,27 @@ Polynomial::clsPoly AI_for2(Polynomial::clsPoly _p, unsigned int _N)
                 tmp.zero();
             break;
         }
-        if (f.Degree < g.Degree) {
+        if (f.Degree() < g.Degree()) {
             tmp = f;
             f = g;
             g = tmp;
             tmp = c;
             c = b;
             b = tmp;
+            kill = false;
         }
         f = Polynomial::addPoly_mod(f,g,2);
         b = Polynomial::addPoly_mod(b,c,2);
         b.refine();
         f.refine();
+        if (f.Coef[0]&&kill)
+        {
+            if (aaasss ++ > 5) {
+                tmp.zero();
+                break;
+            }
+            kill = false;
+        }
     } while (true);
     return tmp;
 }
@@ -103,110 +126,40 @@ Polynomial::clsPoly AI_for2(Polynomial::clsPoly _p, unsigned int _N)
 Polynomial::clsPoly
 NewtonIteration_for2(Polynomial::clsPoly _p,
                               Polynomial::clsPoly _p_1,
-                              int _m,
-                              int _N)
-{
+                              u_int16_t _m,
+                              u_int16_t _N) {
     Polynomial::clsPoly res = _p_1,two(0),tmp;
     two.Coef[0]=2;
-    int q = 2;
+    u_int32_t q = 2;
     while (_m > q) {
 //        q = std::pow(q,2);
-        q *=2;
+        q *=q;
         std::cout << q << " < " << _m<< std::endl;
-        if (q > 32) {
-            std::cout << q << " > " << _m<< std::endl;
-            break;
-        }
         tmp = Polynomial::mulPoly_mod(_p,res,q,_N-1);
         tmp = Polynomial::subPoly_mod(two,tmp,q);
         res = Polynomial::mulPoly_mod(tmp,res,q,_N-1);
 
     }
     res.refine();
-    res = Polynomial::addPoly_mod(0,res,_m);
+    res.applyMod(_m);
     return res;
 }
 
-Polynomial::clsPoly forQ(Polynomial::clsPoly _p, unsigned int _N, unsigned int _Q)
+Polynomial::clsPoly forQ(Polynomial::clsPoly _p, u_int16_t _N, u_int16_t _Q)
 {
+    std::cout << "\t <<<<<<<<<<<<For 2" << std::endl;
     Polynomial::clsPoly p_2 = AI_for2(_p,_N);
+    if (p_2.isZero()) {
+        std::cout << "\t NADASHTTTTTTT!!!" << std::endl;
+        return p_2;
+
+    }
+    std::cout << "\t >>>>>>>>>>>>>>For 2 generated!!!" << std::endl;
+
     return NewtonIteration_for2(_p,p_2,_Q,_N);
 }
 
-Polynomial::clsPoly AI_forP(Polynomial::clsPoly _p, unsigned int _N, unsigned int _m)
-{
-    unsigned int k = 0;
-    Polynomial::clsPoly b(0),c(0),f=_p,g(_N),tmp;
-    g.Coef[_N] = b.Coef[0] = 1;
-    g.Coef[0] = -1;
-    Polynomial::clsPoly x(1);
-    x.Coef[1] = 1;
-    do {
-        while (f.Coef[0]==0) {
-            k++;
-            f.decreaseDeg();
-            f.refine();
-            c = Polynomial::mulPoly(&c,&x);
-            c.refine();
-        }
-        if (f.Degree == 0) {
-            int u = ExtendedEuclidian(f.Coef[0],_m);
-            b = Polynomial::mulPoly_mod(u,b,_m);
-//            b.refine();
-            k %=_N;
-            x = Polynomial::clsPoly(_N-k);
-            x.Coef[_N-k] = f.Coef[0];
-            tmp = Polynomial::mulPoly_mod(b,x,_m,_N-1);
-            tmp.refine();
 
-            break;
-        }
-        if (f.Degree < g.Degree) {
-            tmp = f;
-            f = g;
-            g = tmp;
-            tmp = c;
-            c = b;
-            b = tmp;
-        }
-        int u = (ExtendedEuclidian(g.Coef[0],_m)*f.Coef[0])%_m;
-        tmp = Polynomial::mulPoly_mod(u,g,_m);
-        f = Polynomial::subPoly_mod(f,tmp,_m);
-        tmp = Polynomial::mulPoly_mod(u,c,_m);
-        b = Polynomial::subPoly_mod(b,tmp,_m);
-        b.refine();
-        f.refine();
-    } while (true);
-    return tmp;
-}
-
-int ExtendedEuclidian(unsigned int _a, unsigned int _b) {
-    unsigned int /*gcd = 0,*/r =0,r_prime=0, x = 1, x_prime = 0,y=0,y_prime=1,dev=0,tmp = 0;
-    int reverse = -1;
-    r = _b;
-    r_prime = _a%_b;
-//    unsigned char i = 1;
-    while (r_prime != 0) {
-        dev = r/r_prime;
-        tmp = r;
-        r = r_prime;
-        r_prime = tmp - (dev*r_prime);
-        tmp = x;
-        x = x_prime;
-        x_prime = tmp - (dev*x_prime);
-        tmp = y;
-        y = y_prime;
-        y_prime = tmp - (dev*y_prime);
-    }
-    //since we are not using these variable anymore, using them as temp to print nice formula
-    r = _b*x;
-    r_prime=(_a%_b)*y;
-    if (r+r_prime == 1) {
-//        while (reverse < 0)
-            reverse = y;//(y+=_b)%_b; //get rid of the minus
-    }
-    return reverse;
-}
 
 } // namespace Inverese
 
@@ -215,7 +168,7 @@ void RND::fillPoly(Polynomial::clsPoly *_p,const u_int16_t _d, const int _val)
 {
     u_int16_t i,t = 0;
     while (t < _d) {
-        i = this->intLessThan(_p->Degree+1);
+        i = this->intLessThan(_p->Degree()+1);
         if (!_p->Coef[i]) {
             _p->Coef[i] = _val;
             t++;
@@ -245,17 +198,28 @@ Polynomial::clsPoly MbinToMtrin(const unsigned char *_m, size_t _l,const Config:
 
     Polynomial::clsPoly Mtrin(_param.N-1);
     u_int16_t db_byte = _param.db/8;
-    u_int16_t Mbin_len = db_byte + 1 + _max_len + 1;
+
+//    u_int16_t Mbin_len = db_byte + 1 + _max_len + 1;
+    int32_t s = ((_l+1) %3)-3;
+    s*=-1;
+    u_int16_t Mbin_len = _l+s+1;
     // creat M and b
     u_int8_t b[db_byte],Mbin[Mbin_len];
-    MISC::RND::instance().fillByte(b,db_byte);
-    memcpy(&Mbin,&b,db_byte);
-    u_int8_t *M_head = (u_int8_t*)&Mbin + db_byte;
-    *M_head = _l;
-    M_head++;
-    memcpy(M_head, _m, _l);
-    M_head += _l;
-    memset(M_head, 0, _max_len+1-_l);
+    memcpy(&Mbin,_m, _l);
+    u_int8_t *M_head = (u_int8_t*)&Mbin + _l;
+    memset(M_head,0x00,Mbin_len-_l);
+//    memset(&Mbin, 0xCA, 1);
+//    memset((u_int8_t*)&Mbin+1, 0xEC, 1);
+//    memset((u_int8_t*)&Mbin+2, 0xAE, 1);
+    std::cout << Mbin << "\ts: " << s<< std::endl;
+//    MISC::RND::instance().fillByte(b,db_byte);
+//    memcpy(&Mbin,&b,db_byte);
+//    u_int8_t *M_head = (u_int8_t*)&Mbin + db_byte;
+//    *M_head = _l;
+//    M_head++;
+//    memcpy(M_head, _m, _l);
+//    M_head += _l;
+//    memset(M_head, 0, _max_len+1-_l);
     //convert Mbin to Mtrin
     u_int16_t Mtrin_idx = 0;
     //32 > 3*8=24
@@ -267,10 +231,18 @@ Polynomial::clsPoly MbinToMtrin(const unsigned char *_m, size_t _l,const Config:
         tmp += (unsigned char)Mbin[i+1];
         tmp <<= 8;
         tmp += (unsigned char)Mbin[i];
+        std::bitset<8> h1 = bitset<8>(Mbin[i+2]);
+        std::bitset<8> h2 = bitset<8>(Mbin[i+1]);
+        std::bitset<8> h3 = bitset<8>(Mbin[i]);
+        cout << h1<<"\t"<<h2<<"\t"<<h3<<"\t"<<"3 in process"<< endl;
+        std::cout << tmp <<"  -----tmp" << std::endl;
         i += 3;
         uint8_t j;
         for (j=0; j<8 && Mtrin_idx<_param.N-1; j++) {
             unsigned char k = tmp & 7;
+            std::bitset<3> yek = k;
+
+            cout << (int)k <<"\tK"<<yek<< endl;
             Mtrin.Coef[Mtrin_idx++] = BIN_TO_TRIN_POLY_1[k];
             Mtrin.Coef[Mtrin_idx++] = BIN_TO_TRIN_POLY_2[k];
             tmp >>= 3;
@@ -279,12 +251,13 @@ Polynomial::clsPoly MbinToMtrin(const unsigned char *_m, size_t _l,const Config:
     return Mtrin;
 }
 
-std::string MtrinToMbin(const Polynomial::clsPoly *_mtrin) {
+std::string MtrinToMbin(Polynomial::clsPoly *_mtrin) {
     std::string res;
-    u_int16_t c1, c2, c3, i = 0;
+    u_int16_t c1, c2, c3, i = 0, N = _mtrin->Degree();
     int coef1,coef2,coef3,coef4,coef5,coef6;
     char data[3] = {0,0,0};
-    while (i < _mtrin->Degree) {
+
+    while (i < N) {
         coef1 = _mtrin->Coef[i++];
         coef2 = _mtrin->Coef[i++];
         coef3 = _mtrin->Coef[i++];
@@ -296,8 +269,12 @@ std::string MtrinToMbin(const Polynomial::clsPoly *_mtrin) {
         c1 = 3*coef1 + coef2;
         c2 = 3*coef3 + coef4;
         c3 = 3*coef5 + coef6;
-        data[0] = (c1<<5) | (c2<<2) | (c3>>1);
-        data[1] = (c3<<7);
+        data[0] = (c1) | (c2<<3) | (c3<<6);
+        std::bitset<8> h1 = bitset<8>(data[0]);
+        cout << h1<<"\td_0"<< endl;
+        data[1] = (c3>>2);
+        h1 = bitset<8>(data[1]);
+        cout << h1<<"\td_1"<< endl;
 
         coef1 = _mtrin->Coef[i++];
         coef2 = _mtrin->Coef[i++];
@@ -310,8 +287,12 @@ std::string MtrinToMbin(const Polynomial::clsPoly *_mtrin) {
         c1 = 3*coef1 + coef2;
         c2 = 3*coef3 + coef4;
         c3 = 3*coef5 + coef6;
-        data[1] |= (c1<<4) | (c2<<1) | (c3>>2);
-        data[2] = (c3 << 6);
+        data[1] |= (c1<<1) | (c2<<4) | (c3<<7);
+        h1 = bitset<8>(data[1]);
+        cout << h1<<"\td_1"<< endl;
+        data[2] = (c3>>1);
+        h1 = bitset<8>(data[2]);
+        cout << h1<<"\td_2"<< endl;
         coef1 = _mtrin->Coef[i++];
         coef2 = _mtrin->Coef[i++];
         coef3 = _mtrin->Coef[i++];
@@ -320,7 +301,15 @@ std::string MtrinToMbin(const Polynomial::clsPoly *_mtrin) {
 //            valid = 0;
         c1 = 3*coef1 + coef2;
         c2 = 3*coef3 + coef4;
-        data[2] |=  (c1<<3) | c2;
+        data[2] |=  (c1<<2) | (c2<<5);
+        h1 = bitset<8>(data[2]);
+        cout << h1<<"\td_2"<< endl;
+        char chr[3];
+        chr[2]= __bswap_16(data[0]);
+        chr[1]= __bswap_16(data[1]);
+        chr[0]= __bswap_16(data[2]);
+
+//        res.insert(0,data);
         res.append(data);
     }
     return res;
@@ -483,6 +472,20 @@ params_t __EES1499EP1__() {
     _p.maxMsgLen = 247;
     _p.dr = 79;
     _p.c = 13;
+    return _p;
+}
+
+params_t __TEST__()
+{
+    params_t _p;
+    _p.N = 167;
+    _p.q = 128;
+    _p.df = 20;
+    _p.dg = 30;
+    _p.db = 30;
+    _p.maxMsgLen = 60;
+    _p.dr = 10;
+    _p.c = 11;
     return _p;
 }
 
